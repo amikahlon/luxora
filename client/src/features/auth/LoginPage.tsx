@@ -1,18 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import { Crown, LogIn, Sparkles } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../shared/components/Button";
 import { Input } from "../../shared/components/Input";
+import { parseApiError, type ParsedApiError } from "../../shared/lib/apiError";
 import { login } from "./api";
 import { useAuthStore } from "./authStore";
 
 export function LoginPage() {
   const [email, setEmail] = useState("demo@luxora.dev");
   const [password, setPassword] = useState("Password123!");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ParsedApiError | null>(null);
   const setSession = useAuthStore((state) => state.setSession);
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,17 +26,13 @@ export function LoginPage() {
       navigate((location.state as { from?: string } | null)?.from ?? "/products");
     },
     onError: (mutationError) => {
-      const message =
-        mutationError instanceof AxiosError
-          ? mutationError.response?.data?.message ?? "Login failed"
-          : "Login failed";
-      setError(message);
+      setError(parseApiError(mutationError, "Login failed. Please try again."));
     },
   });
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    setError("");
+    setError(null);
     mutation.mutate({ email, password });
   };
 
@@ -80,7 +76,18 @@ export function LoginPage() {
               type="password"
             />
           </label>
-          {error ? <p className="rounded-md bg-luxora-wine/10 px-3 py-2 text-sm text-luxora-wine">{error}</p> : null}
+          {error ? (
+            <div className="rounded-md border border-luxora-wine/20 bg-luxora-wine/10 px-3 py-3 text-sm text-luxora-wine">
+              <p className="font-semibold">{error.message}</p>
+              {error.details.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {error.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
           <Button className="w-full" type="submit" disabled={mutation.isPending}>
             <LogIn size={18} />
             Sign in

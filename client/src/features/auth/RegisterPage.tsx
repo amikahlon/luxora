@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import { Crown, Gem, UserPlus } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../shared/components/Button";
 import { Input } from "../../shared/components/Input";
+import { parseApiError, type ParsedApiError } from "../../shared/lib/apiError";
 import { register } from "./api";
 import { useAuthStore } from "./authStore";
 
@@ -16,7 +16,7 @@ export function RegisterPage() {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ParsedApiError | null>(null);
   const setSession = useAuthStore((state) => state.setSession);
   const navigate = useNavigate();
 
@@ -27,17 +27,13 @@ export function RegisterPage() {
       navigate("/products");
     },
     onError: (mutationError) => {
-      const message =
-        mutationError instanceof AxiosError
-          ? mutationError.response?.data?.message ?? "Registration failed"
-          : "Registration failed";
-      setError(message);
+      setError(parseApiError(mutationError, "Registration failed. Please try again."));
     },
   });
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    setError("");
+    setError(null);
     mutation.mutate(form);
   };
 
@@ -99,7 +95,18 @@ export function RegisterPage() {
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
           />
         </label>
-        {error ? <p className="rounded-md bg-luxora-wine/10 px-3 py-2 text-sm text-luxora-wine sm:col-span-2">{error}</p> : null}
+        {error ? (
+          <div className="rounded-md border border-luxora-wine/20 bg-luxora-wine/10 px-3 py-3 text-sm text-luxora-wine sm:col-span-2">
+            <p className="font-semibold">{error.message}</p>
+            {error.details.length ? (
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {error.details.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
         <Button className="sm:col-span-2" type="submit" disabled={mutation.isPending}>
           <UserPlus size={18} />
           Create account

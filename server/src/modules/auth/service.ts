@@ -51,7 +51,12 @@ export const authService = {
     });
 
     if (existingUser) {
-      throw new AppError("Email is already registered", 409, "AUTH_EMAIL_EXISTS");
+      throw new AppError("Email is already registered", 409, "AUTH_EMAIL_EXISTS", [
+        {
+          path: ["email"],
+          message: "This email already has an account. Please sign in or use another email.",
+        },
+      ]);
     }
 
     const passwordHash = await bcrypt.hash(input.password, PASSWORD_SALT_ROUNDS);

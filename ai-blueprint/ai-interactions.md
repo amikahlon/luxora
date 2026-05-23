@@ -234,3 +234,29 @@ Fixed:
 - stale cart badge count
 - cached cart query cleanup
 - logout state synchronization between auth and cart state
+
+## Registration Error Handling
+
+### Issue
+
+Some registration errors returned generic server messages instead of clear business validation messages.
+
+For example, trying to register with an existing email returned a generic error instead of explaining that the email already exists.
+
+### Tools
+
+Postman + Codex
+
+### Prompt
+
+I shared only the relevant auth controller, service, and validation files instead of the entire backend.
+
+"Refactor registration error handling so duplicate email registration returns a clear and user-friendly validation message."
+
+### Result
+
+Fixed:
+
+- duplicate email validation handling
+- clearer API error messages
+- consistent auth validation responses
