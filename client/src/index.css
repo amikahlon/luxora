@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background: #fbf8f1;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-luxora-cream text-luxora-ink font-sans antialiased;
+  background:
+    linear-gradient(135deg, rgba(255, 252, 247, 0.98) 0%, rgba(247, 241, 231, 0.98) 48%, rgba(255, 252, 247, 0.98) 100%),
+    linear-gradient(180deg, rgba(201, 163, 90, 0.08), rgba(255, 255, 255, 0));
+  background-attachment: fixed;
+  background-position: center top;
+  background-size: cover;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  background: #c9a35a;
+  color: #0b0b0f;
+}
