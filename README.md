@@ -122,6 +122,12 @@ Health check:
 http://localhost:4000/api/health
 ```
 
+Prisma Studio:
+
+```txt
+http://localhost:5555
+```
+
 ### Stop the project
 
 ```bash
