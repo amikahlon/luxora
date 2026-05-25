@@ -13,10 +13,68 @@ services:
     volumes:
       - luxora_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+
+  server:
+    build:
+      context: ./server
+    container_name: luxora_server
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CLIENT_ORIGIN: http://localhost:5173
+      DATABASE_URL: mysql://luxora_user:luxora_password@mysql:3306/luxora_db
+      SHADOW_DATABASE_URL: mysql://root:root_password@mysql:3306/luxora_shadow_db
+      JWT_SECRET: luxora-docker-access-secret-change-in-production
+      JWT_REFRESH_SECRET: luxora-docker-refresh-secret-change-in-production
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:4000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:4000/api
+    container_name: luxora_client
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "5173:5173"
+
+  prisma-studio:
+    build:
+      context: ./server
+    container_name: luxora_prisma_studio
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://luxora_user:luxora_password@mysql:3306/luxora_db
+      SHADOW_DATABASE_URL: mysql://root:root_password@mysql:3306/luxora_shadow_db
+    command: ["npx", "prisma", "studio", "--port", "5555", "--browser", "none"]
+    ports:
+      - "5555:5555"
 
 volumes:
   luxora_mysql_data:
